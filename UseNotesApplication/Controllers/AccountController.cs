@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using UseNotesApplication.Data;
 using UseNotesApplication.Models;
 using UseNotesApplication.ViewModels;
@@ -15,6 +16,7 @@ namespace UseNotesApplication.Controllers
             _context = context;
             _webHostEnvironment = webHostEnvironment;
         }
+        //Register Module Logic
         [HttpGet]
         public IActionResult Register()
         {
@@ -75,5 +77,6 @@ namespace UseNotesApplication.Controllers
             TempData["Success"] = "Registered Successfully";
             return RedirectToAction("Login");
         }
+        
     }
 }
