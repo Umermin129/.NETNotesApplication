@@ -20,3 +20,6 @@ html {
 body {
   margin-bottom: 60px;
 }
+.bg-custom {
+    background-color: #54dea2;
+}
