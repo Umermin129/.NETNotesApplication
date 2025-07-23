@@ -1,0 +1,24 @@
+{
+  "name": "usenotesapplication",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:css": "tailwindcss -i ./wwwroot/css/tailwind.css -o ./wwwroot/css/output.css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Umermin129/.NETNotesApplication.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Umermin129/.NETNotesApplication/issues"
+  },
+  "homepage": "https://github.com/Umermin129/.NETNotesApplication#readme",
+  "devDependencies": {
+    "tailwindcss": "^4.1.11"
+  },
+  "description": ""
+}

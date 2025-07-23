@@ -1,0 +1,43 @@
+﻿@model UseNotesApplication.ViewModels.RegistrationViewModel
+
+@{
+    ViewData["Title"] = "Register";
+}
+
+<h2>Sign Up</h2>
+
+<form asp-action="Register" method="post" enctype="multipart/form-data">
+    <div>
+        <label asp-for="UserName"></label>
+        <input asp-for="UserName" />
+        <span asp-validation-for="UserName" class="text-danger"></span>
+    </div>
+    <div>
+        <label asp-for="Name"></label>
+        <input asp-for="Name"/>
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div>
+        <label asp-for="Email"></label>
+        <input asp-for="Email"/>
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div>
+        <label asp-for="Images">Upload 5 Images</label>
+        <input asp-action="Images" type="file" name="Images" multiple required/>
+        <span asp-validation-for="Images" class="text-danger"></span>
+    </div>
+
+    <div>
+        <p>Enter the sequence of each image(1-5):</p>
+        @for (int i = 0;i<5;i++)
+        {
+            <input type="number" name="Sequence" min="1" max="5" required/>
+        }
+
+    </div>
+
+    <button type="submit">Register</button>
+</form>
