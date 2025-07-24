@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using UseNotesApplication.Data;
 using UseNotesApplication.Models;
 using UseNotesApplication.ViewModels;
@@ -25,6 +26,7 @@ namespace UseNotesApplication.Controllers
         [HttpPost]
         public IActionResult Register(RegistrationViewModel model)
         {
+
             if (!ModelState.IsValid || model.Images.Count != 5 || model.Sequence.Count != 5)
             {
                 ModelState.AddModelError("", "Please Upload exactly 5 images and Sequence!");
@@ -56,8 +58,10 @@ namespace UseNotesApplication.Controllers
             {
                 var File = model.Images[i];
                 var sequence = model.Sequence[i];
+                var rename = model.RenameImages[i];
+                var fileExtension = Path.GetExtension(File.FileName);
 
-                var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(File.FileName)}";
+                var fileName = $"{rename}{fileExtension}";
                 var filePath = Path.Combine(userFolder, fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
@@ -87,7 +91,7 @@ namespace UseNotesApplication.Controllers
         [HttpPost]
         public IActionResult LoginUserName(string UserName)
         {
-            var user = _context.Users.Include(x => x.Pictures).FirstOrDefault(u=>u.UserName== UserName);
+            var user = _context.Users.Include(x => x.Pictures).FirstOrDefault(u => u.UserName == UserName);
 
             if (user == null)
             {
@@ -95,8 +99,8 @@ namespace UseNotesApplication.Controllers
                 return View("Login");
             }
 
-            var randomImages = Enumerable.Range(1,10).Select(i=> new LoginImage{Id = i,  ImageURI = $"https://picsum.photos/seed/{Guid.NewGuid()}/100/100" }).ToList();
-            var currentPictures = user.Pictures.Select(i => new LoginImage{Id = i.Id,ImageURI = i.ImageURI}).ToList();
+            var randomImages = Enumerable.Range(1, 10).Select(i => new LoginImage { Id = i, ImageURI = $"https://picsum.photos/seed/{Guid.NewGuid()}/100/100" }).ToList();
+            var currentPictures = user.Pictures.Select(i => new LoginImage { Id = i.Id, ImageURI = i.ImageURI }).ToList();
 
             //var fullImages = currentPictures.Concat(randomImages).OrderBy(x=> Guid.NewGuid()).ToList();
             HttpContext.Session.SetString("ExpectedSequence", string.Join(",", user.Pictures.OrderBy(p => p.Sequence).Select(p => p.Id)));
@@ -112,7 +116,7 @@ namespace UseNotesApplication.Controllers
         {
             var expectedSequence = HttpContext.Session.GetString("ExpectedSequence");
 
-            if(expectedSequence == null)
+            if (expectedSequence == null)
             {
                 ModelState.AddModelError("", "Session Expired");
                 return RedirectToAction("LoginUserName");
@@ -120,7 +124,7 @@ namespace UseNotesApplication.Controllers
 
             var expectedIds = expectedSequence.Split(',').Select(int.Parse).ToList();
 
-            if(model.SelectedImageIds == null || model.SelectedImageIds.Count != 5)
+            if (model.SelectedImageIds == null || model.SelectedImageIds.Count != 5)
             {
                 ModelState.AddModelError("", "Please Select Exactly 5 Images");
                 return View("LoginGrid", model);
@@ -151,7 +155,26 @@ namespace UseNotesApplication.Controllers
 
 
             TempData["LoginSuccess"] = $"Welcome {HttpContext.Session.GetString("UserName")}";
-            return View("index","Home");
+            return View("index", "Home");
         }
+        //Home View Logic
+        [HttpGet]
+        public IActionResult HomeView()
+        {
+        return View();
+        }
+
+        //[HttpGet]
+        //public IActionResult UserGet()
+        //{
+        //    var userName = HttpContext.Session.GetString("UserName");
+        //    var user = _context.Users.Include(u=>u.Notes).FirstOrDefault(i=>i.UserName == userName);
+        //    if(user ==  null)
+        //    {
+        //        ModelState.AddModelError("UserName", "User Not Found!");
+        //        return View("Login");
+        //    }
+
+        //}
     }
 }

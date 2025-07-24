@@ -5,12 +5,15 @@
 <form asp-action="LoginConfirm" method="post">
     <input type="hidden" name="UserName" value="@Model.UserName" />
     <div id="imageGrid">
-        @foreach (var img in Model.GridImages)
+        @if (Model.GridImages != null)
         {
-            <img src="@Url.Content("~/" + img.ImageURI)" 
-                 img-id="@img.Id"
-                 style="width: 100px; height: 100px; margin: 5px; cursor: pointer;"
-                 onclick="selectImage(this)" />
+            @foreach (var img in Model.GridImages)
+            {
+                <img src="@Url.Content("~/" + img.ImageURI)"
+                     img-id="@img.Id"
+                     style="width: 100px; height: 100px; margin: 5px; cursor: pointer;"
+                     onclick="selectImage(this)" />
+            }
         }
     </div>
 
