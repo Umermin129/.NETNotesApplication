@@ -1,0 +1,10 @@
+﻿Login CS Html
+@model UseNotesApplication.ViewModels.LoginViewModel
+<h2>Welcome to Login Page</h2>
+
+<form asp-action="LoginUserName" method="post">
+    <label>Enter UserName</label>
+    <input type="text" name="userName" required />
+    <span asp-validation-for="UserName" class="text-danger"></span>
+    <button class="text-black-50" type="submit">Next</button>
+</form>

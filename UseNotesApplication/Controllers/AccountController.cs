@@ -77,6 +77,81 @@ namespace UseNotesApplication.Controllers
             TempData["Success"] = "Registered Successfully";
             return RedirectToAction("Login");
         }
-        
+        //Login Logic
+        [HttpGet]
+        public IActionResult Login()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult LoginUserName(string UserName)
+        {
+            var user = _context.Users.Include(x => x.Pictures).FirstOrDefault(u=>u.UserName== UserName);
+
+            if (user == null)
+            {
+                ModelState.AddModelError("UserName", "Invalid UserName");
+                return View("Login");
+            }
+
+            var randomImages = Enumerable.Range(1,10).Select(i=> new LoginImage{Id = i,  ImageURI = $"https://picsum.photos/seed/{Guid.NewGuid()}/100/100" }).ToList();
+            var currentPictures = user.Pictures.Select(i => new LoginImage{Id = i.Id,ImageURI = i.ImageURI}).ToList();
+
+            //var fullImages = currentPictures.Concat(randomImages).OrderBy(x=> Guid.NewGuid()).ToList();
+            HttpContext.Session.SetString("ExpectedSequence", string.Join(",", user.Pictures.OrderBy(p => p.Sequence).Select(p => p.Id)));
+            HttpContext.Session.SetString("UserName", UserName);
+            return View("LoginGrid", new LoginViewModel
+            {
+                UserName = UserName,
+                GridImages = currentPictures,
+            });
+        }
+        [HttpPost]
+        public IActionResult LoginConfirm(LoginViewModel model)
+        {
+            var expectedSequence = HttpContext.Session.GetString("ExpectedSequence");
+
+            if(expectedSequence == null)
+            {
+                ModelState.AddModelError("", "Session Expired");
+                return RedirectToAction("LoginUserName");
+            }
+
+            var expectedIds = expectedSequence.Split(',').Select(int.Parse).ToList();
+
+            if(model.SelectedImageIds == null || model.SelectedImageIds.Count != 5)
+            {
+                ModelState.AddModelError("", "Please Select Exactly 5 Images");
+                return View("LoginGrid", model);
+            }
+            if (!expectedIds.SequenceEqual(model.SelectedImageIds))
+            {
+                ModelState.AddModelError("", "Invalid Sequence");
+
+                // Re-fetch the user and images to re-populate GridImages
+                string userName = HttpContext.Session.GetString("UserName");
+                var user = _context.Users.Include(u => u.Pictures).FirstOrDefault(u => u.UserName == userName);
+
+                var images = user?.Pictures?.Select(i => new LoginImage
+                {
+                    Id = i.Id,
+                    ImageURI = i.ImageURI
+                }).ToList() ?? new List<LoginImage>();
+
+                model.GridImages = images;
+
+                return View("LoginGrid", model);
+            }
+            if (expectedSequence == null)
+            {
+                ModelState.AddModelError("", "Session expired. Please login again.");
+                return RedirectToAction("Login");
+            }
+
+
+            TempData["LoginSuccess"] = $"Welcome {HttpContext.Session.GetString("UserName")}";
+            return View("index","Home");
+        }
     }
 }

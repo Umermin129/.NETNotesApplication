@@ -1,0 +1,43 @@
+﻿@model UseNotesApplication.ViewModels.LoginViewModel
+
+<h2>Select Your Image Sequence (Click 5 Images)</h2>
+
+<form asp-action="LoginConfirm" method="post">
+    <input type="hidden" name="UserName" value="@Model.UserName" />
+    <div id="imageGrid">
+        @foreach (var img in Model.GridImages)
+        {
+            <img src="@Url.Content("~/" + img.ImageURI)" 
+                 img-id="@img.Id"
+                 style="width: 100px; height: 100px; margin: 5px; cursor: pointer;"
+                 onclick="selectImage(this)" />
+        }
+    </div>
+
+    <input type="hidden" name="SelectedImageIds" id="SelectedImageIds" />
+    <button type="submit">Login</button>
+</form>
+
+<p id="message" style="color:red;">
+    @if (!ViewData.ModelState.IsValid)
+    {
+        @ViewData.ModelState.Values.SelectMany(x => x.Errors).FirstOrDefault()?.ErrorMessage
+    }
+</p>
+
+<script>
+    const selected = [];
+    function selectImage(img) {
+        const id = img.getAttribute("img-id");
+        if (selected.includes(id)) return;
+
+        if (selected.length < 5) {
+            selected.push(id);
+            img.style.border = "2px solid green";
+        } else {
+            alert("You can only select 5 images.");
+        }
+
+        document.getElementById("SelectedImageIds").value = selected.join(",");
+    }
+</script>
