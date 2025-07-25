@@ -5,7 +5,7 @@ using System.Text.Json;
 using UseNotesApplication.Data;
 using UseNotesApplication.Models;
 using UseNotesApplication.ViewModels;
-
+using UseNotesApplication.Controllers;
 namespace UseNotesApplication.Controllers
 {
     public class AccountController : Controller
@@ -188,16 +188,14 @@ namespace UseNotesApplication.Controllers
             }
 
             TempData["LoginSuccess"] = $"Welcome {HttpContext.Session.GetString("UserName")}";
-            return RedirectToAction("HomeView");
+            return RedirectToAction("Index");
         }
         //Home View Logic
         [HttpGet]
-        public IActionResult HomeView()
+        public IActionResult Index()
         {
-            if (HttpContext.Session.GetString("UserName") == null)
-                return View();
-            else
-                return View("UserGet");
+
+            return RedirectToAction("Index", "Home");
         }
 
         //[HttpGet]

@@ -1,8 +1,40 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
+    var currentSession = Context.Session.GetString("UserName");
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome To UseNotes </h1>
+    <h1 class="display-4">Welcome To UseNotes</h1>
     <p>Organize Today. Recall Forever.</p>
+
+    @if (string.IsNullOrEmpty(currentSession))
+    {
+        <div class="row mt-4 justify-content-center">
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-sm">
+                    <img src="https://img.freepik.com/free-vector/note-taking-concept-illustration_114360-7344.jpg" class="card-img-top" alt="Sample Note 1">
+                    <div class="card-body">
+                        <h5 class="card-title">Track Progress</h5>
+                        <p class="card-text">Mark your tasks as Pending, In Progress, or Done.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-sm">
+                    <img src="https://img.freepik.com/free-vector/todo-list-concept-illustration_114360-8393.jpg" class="card-img-top" alt="Sample Note 2">
+                    <div class="card-body">
+                        <h5 class="card-title">Never Miss a Task</h5>
+                        <p class="card-text">Create, edit, and manage all your notes with ease.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-success mt-4">
+            👋 Hello, <strong>@currentSession</strong>! Welcome back to UseNotes.
+        </div>
+    }
 </div>
