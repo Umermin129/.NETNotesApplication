@@ -5,21 +5,21 @@
 
 <form asp-action="LoginConfirm" method="post">
     <input type="hidden" name="UserName" value="@Model.UserName" />
-    <div id="imageGrid">
+    <input type="hidden" asp-for="SelectedImageIds" id="SelectedImageIds" />
+
+    <div id="imageGrid" style="display: flex; flex-wrap: wrap;">
         @if (Model.GridImages != null)
         {
-            var count = 0;
-            @foreach (var img in Model.GridImages)
+            foreach (var img in Model.GridImages)
             {
                 <img src="@Url.Content("~/" + img.ImageURI)"
                      img-id="@img.Id"
-                     style="width: 100px; height: 100px; margin: 5px; cursor: pointer;"
-                     onclick="selectImage(this)" />
+                     onclick="selectImage(this)"
+                     style="width: 100px; height: 100px; margin: 5px; cursor: pointer; border: 2px solid transparent;" />
             }
         }
     </div>
 
-    <input type="hidden" id="SelectedImageIds" asp-for="SelectedImageIds" />
     <button type="submit">Login</button>
 </form>
 
@@ -32,18 +32,23 @@
 
 <script>
     const selected = [];
+
     function selectImage(img) {
         const id = img.getAttribute("img-id");
-        if (selected.includes(id)) return;
+
+        if (selected.includes(id)) {
+            alert("Already selected!");
+            return;
+        }
 
         if (selected.length < 5) {
             selected.push(id);
-            img.style.border = "2px solid green";
+            img.style.border = "3px solid green";
         } else {
             alert("You can only select 5 images.");
         }
-        console.log("Selected : ",selected.length);
+
         document.getElementById("SelectedImageIds").value = selected.join(",");
-        console.log( document.getElementById("SelectedImageIds").value)
+        console.log("Selected IDs: ", selected);
     }
 </script>
