@@ -12,7 +12,7 @@ namespace UseNotesApplication.ViewModels
         [Required]
         public String UserName { get; set; }
 
-        public List<LoginImage> GridImages { get; set; } 
-        public List<int> SelectedImageIds { get; set; } = new();
+        public List<LoginImage> GridImages { get; set; }
+        public List<int> SelectedImageIds { get; set; } = new List<int>();
     }
 }

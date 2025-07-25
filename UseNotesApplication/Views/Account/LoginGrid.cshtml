@@ -1,4 +1,5 @@
 ﻿@model UseNotesApplication.ViewModels.LoginViewModel
+@using System.Text.Json
 
 <h2>Select Your Image Sequence (Click 5 Images)</h2>
 
@@ -7,6 +8,7 @@
     <div id="imageGrid">
         @if (Model.GridImages != null)
         {
+            var count = 0;
             @foreach (var img in Model.GridImages)
             {
                 <img src="@Url.Content("~/" + img.ImageURI)"
@@ -17,7 +19,7 @@
         }
     </div>
 
-    <input type="hidden" name="SelectedImageIds" id="SelectedImageIds" />
+    <input type="hidden" id="SelectedImageIds" asp-for="SelectedImageIds" />
     <button type="submit">Login</button>
 </form>
 
@@ -40,7 +42,8 @@
         } else {
             alert("You can only select 5 images.");
         }
-
+        console.log("Selected : ",selected.length);
         document.getElementById("SelectedImageIds").value = selected.join(",");
+        console.log( document.getElementById("SelectedImageIds").value)
     }
 </script>
