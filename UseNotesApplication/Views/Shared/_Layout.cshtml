@@ -21,6 +21,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 @{
+                    var currentSession = Context.Session.GetString("UserName");
                     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
                     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
                 }
@@ -29,11 +30,17 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        @if (currentController == "Home" && currentAction == "Index")
+                        @if (currentController == "Home" && currentAction == "Index" && currentSession ==null )
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
+                                <a class="nav-link" asp-controller="Account" asp-action="LogIn">Login</a>
                             </li>
+                        }
+                        else if (currentController == "Home" && currentAction == "Index" && currentSession !=null )
+                        {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Account" asp-action="LogOut">Logout</a>
+                        </li>
                         }
                         else if (currentController == "Account" && currentAction == "Login")
                         {

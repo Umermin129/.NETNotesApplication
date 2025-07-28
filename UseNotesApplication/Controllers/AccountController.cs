@@ -59,10 +59,9 @@ namespace UseNotesApplication.Controllers
             {
                 var File = model.Images[i];
                 var sequence = model.Sequence[i];
-                var rename = model.RenameImages[i];
                 var fileExtension = Path.GetExtension(File.FileName);
 
-                var fileName = $"{rename}{fileExtension}";
+                var fileName = $"{Guid.NewGuid()}_{sequence}{fileExtension}";
                 var filePath = Path.Combine(userFolder, fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
@@ -104,7 +103,7 @@ namespace UseNotesApplication.Controllers
                 .Select(i => new LoginImage
                 {
                     Id = i,
-                    ImageURI = $"https://via.placeholder.com/100?text=Img{i}"
+                    ImageURI = $"/UserImages/Image{i}.jpg"
                 })
                 .ToList();
             var currentPictures = user.Pictures.Select(i => new LoginImage { Id = i.Id, ImageURI = i.ImageURI }).ToList();
@@ -199,16 +198,23 @@ namespace UseNotesApplication.Controllers
         }
 
         //[HttpGet]
-      /*  public IActionResult UserGet()
+        /*  public IActionResult UserGet()
+          {
+              var userName = HttpContext.Session.GetString("UserName");
+              var user = _context.Users.Include(u => u.Notes).FirstOrDefault(i => i.UserName == userName);
+              if (user == null)
+              {
+                  ModelState.AddModelError("UserName", "User Not Found!");
+                  return View("Login");
+              }
+
+          }*/
+        [HttpGet]
+        public IActionResult LogOut()
         {
-            var userName = HttpContext.Session.GetString("UserName");
-            var user = _context.Users.Include(u => u.Notes).FirstOrDefault(i => i.UserName == userName);
-            if (user == null)
-            {
-                ModelState.AddModelError("UserName", "User Not Found!");
-                return View("Login");
-            }
-           
-        }*/
+            HttpContext.Session.Clear();
+            TempData["LogOutSuccess"] = "You Have LoggedOut Successfully";
+            return RedirectToAction("Login");
+        }
     }
 }

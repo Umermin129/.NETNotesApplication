@@ -5,7 +5,7 @@ public class NoteVersion
 {
     public int Id { get; set; }
 
-    public int NoteId { get; set; }
+    public int NotesId { get; set; }
     public Notes Notes { get; set; }
 
     [MaxLength(200)]

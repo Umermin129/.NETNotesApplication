@@ -4,6 +4,7 @@ namespace UseNotesApplication.ViewModels
 {
     public class TaskEdit
     {
+        public int Id { get; set; }
         [Required(ErrorMessage="Please Enter Title ")]
         public string Title { get; set; }
         public string? Description { get; set; }

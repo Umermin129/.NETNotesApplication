@@ -20,6 +20,5 @@ namespace UseNotesApplication.ViewModels
 
         [Required(ErrorMessage = "Provide a sequence number for each image.")]
         public List<int> Sequence { get; set; }
-        public List<string> RenameImages { get; set; }
     }
 }
