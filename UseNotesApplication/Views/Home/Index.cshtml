@@ -39,7 +39,7 @@
             👋 Hello, <strong>@currentSession</strong> ! Welcome back to UseNotes.<br />
             <h1 class="align-content-center">Name: @Model.Name <br />Email: @Model.email</h1>
         </div>
-            <a class="btn btn-outline-primary mb-3" asp-controller="Account" asp-action="UpdateProfile">Update Profile</a>
+        <a class="btn btn-outline-primary mb-3" asp-controller="Account" asp-action="UpdateProfile">Update Profile</a>
 
         <div class="container mt-4">
             <h4>Your Notes</h4>
@@ -63,7 +63,7 @@
                             <td>@task.LastUpdated.ToShortTimeString()</td>
                             <td>
                                 @{Console.WriteLine(@task.Id);}
-                                <a asp-action="Edit" asp-route-id="@task.Id" class="btn btn-sm btn-primary ">Edit</a>
+                                <a asp-action="GetNote" asp-route-id="@task.Id" class="btn btn-sm btn-primary ">Edit</a>
                                 <a asp-action="Delete"  asp-route-id="@task.Id" class="btn btn-sm btn-primary ">Delete</a>
                             </td>
                         </tr>

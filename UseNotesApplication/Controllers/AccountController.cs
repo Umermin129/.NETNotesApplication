@@ -210,6 +210,42 @@ namespace UseNotesApplication.Controllers
 
           }*/
         [HttpGet]
+        public IActionResult UpdateProfile()
+        {
+            var userName = HttpContext.Session.GetString("UserName");
+            var user = _context.Users.FirstOrDefault(u => u.UserName == userName);
+
+            if (user == null) return RedirectToAction("Login");
+
+            var model = new ProfileViewModel
+            {
+                UserName = user.UserName,
+                Name = user.Name,
+                Email = user.Email
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public IActionResult UpdateProfile(ProfileViewModel model)
+        {
+            var UserName = HttpContext.Session.GetString("UserName");
+            var user = _context.Users.FirstOrDefault(i => i.UserName == UserName);
+
+            if (user == null) return RedirectToAction("Index", "Home");
+
+            if(_context.Users.Any(u => u.UserName != UserName && u.Email == model.Email))
+            {
+                ModelState.AddModelError("Email", "User with this email already Exists");
+                return View(model);
+            }
+            user.Email = model.Email;
+            user.Name = model.Name;
+            TempData["ProfileUpdated"] = "Profile updated successfully!";
+            return RedirectToAction("Index");
+        }
+        [HttpGet]
         public IActionResult LogOut()
         {
             HttpContext.Session.Clear();

@@ -80,7 +80,7 @@ namespace UseNotesApplication.Controllers
         [HttpPost]
         //Edit Notes 
         [HttpGet]
-        public IActionResult Edit(int id)
+        public IActionResult GetNote(int id)
         {
             var UserName = HttpContext.Session.GetString("UserName");
             var user = _context.Users.Include(u => u.Notes).FirstOrDefault(u => u.UserName == UserName);
