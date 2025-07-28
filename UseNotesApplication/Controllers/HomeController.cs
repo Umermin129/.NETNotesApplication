@@ -16,7 +16,7 @@ namespace UseNotesApplication.Controllers
             _logger = logger;
             _context = context;
         }
-
+        [HttpGet]
         public IActionResult Index()
         {
             var UserName = HttpContext.Session.GetString("UserName"); 
@@ -41,7 +41,35 @@ namespace UseNotesApplication.Controllers
             };
             return View(model);
         }
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View();
+        }
+        [HttpPost]
+        public IActionResult Create(TaskEdit model)
+        {
+            var UserName = HttpContext.Session.GetString("UserName");
+            var user = _context.Users.FirstOrDefault(u => u.UserName == UserName);
+            
+            if(user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
 
+            var note = new Notes
+            {
+                Title = model.Title,
+                Description = model.Description,
+                Status = model.Status??"Pending",
+                UsersId = user.Id,
+            };
+            _context.Notes.Add(note);
+            _context.SaveChanges();
+
+            TempData["NoteSuccess"] = "Note Successfully Created";
+            return RedirectToAction("Index");
+        }
         public IActionResult Privacy()
         {
             return View();

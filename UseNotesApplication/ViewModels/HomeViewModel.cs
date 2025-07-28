@@ -4,7 +4,7 @@ namespace UseNotesApplication.ViewModels
 {
     public class TaskEdit
     {
-        [Required]
+        [Required(ErrorMessage="Please Enter Title ")]
         public string Title { get; set; }
         public string? Description { get; set; }
         public string Status { get; set; } = "Pending";

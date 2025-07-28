@@ -1,4 +1,6 @@
-﻿@{
+﻿@model UseNotesApplication.ViewModels.HomeViewModel
+
+@{
     ViewData["Title"] = "Home Page";
     var currentSession = Context.Session.GetString("UserName");
 }
@@ -35,6 +37,36 @@
     {
         <div class="alert alert-success mt-4">
             👋 Hello, <strong>@currentSession</strong>! Welcome back to UseNotes.
+        </div>
+        <div class="container mt-4">
+            <h4>Your Notes</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Last Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var task in Model.TaskLists)
+                    {
+                        <tr>
+                            <td>@task.Title</td>
+                            <td>@task.Description</td>
+                            <td>@task.Status</td>
+                            <td>@task.LastUpdated.ToShortTimeString()</td>
+                            <td>
+                                <a asp-for="Edit" asp-route-title="@task.Title" class="btn btn-sm btn-primary ">Edit</a>
+                                <a asp-for="Delete" asp-route-title="@task.Title" class="btn btn-sm btn-primary ">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <a asp-Action="Create" class="btn btn-custom">+New Note </a>
         </div>
     }
 </div>
