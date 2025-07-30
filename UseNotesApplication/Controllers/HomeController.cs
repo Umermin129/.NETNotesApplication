@@ -3,78 +3,82 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UseNotesApplication.Data;
 using UseNotesApplication.Models;
-using UseNotesApplication.ViewModels;
+using UseNotesApplication.ViewModels.Notes;
+using UseNotesApplication.ViewModels.Home;
+using UseNotesApplication.Services;
 
 namespace UseNotesApplication.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-        private readonly AppDbContext _context;
-        public HomeController(ILogger<HomeController> logger, AppDbContext context)
+        //Session Strings
+        private void SessionSetUserName(string UserName)
         {
-            _logger = logger;
-            _context = context;
+            HttpContext.Session.SetString("UserName", UserName);
         }
+        private string SessionGetUserName()
+        {
+            return HttpContext.Session.GetString("UserName");
+        }
+        //TempData Success
+        private void NotesCreateSuccess()
+        {
+            TempData["NoteSuccess"] = Constants.NotesSuccess;
+        }
+        private void NotesUpdateSuccess()
+        {
+            TempData["NoteUpdated"] = Constants.NoteUpdate;
+        }
+
+        private readonly ILogger<HomeController> _logger;
+        
+        UserServices _userService ;
+        NotesServices _noteService ;
+        public HomeController(ILogger<HomeController> logger,UserServices userServices,NotesServices notesServices)
+        {
+            _userService = userServices;
+            _noteService = notesServices;
+            _logger = logger;
+
+        }
+        
         [HttpGet]
         public IActionResult Index()
         {
-            var UserName = HttpContext.Session.GetString("UserName");
+            var UserName = SessionGetUserName();
             if (UserName == null)
                 return View();
             else
             {
-                var user = _context.Users.Include(u => u.Notes).FirstOrDefault(u => u.UserName == UserName);
+                var userData = _userService.GetUserWithNotes(UserName);
 
-                if (user == null)
+                if (userData == null)
                 {
-                    return RedirectToAction("Login", "Account");
+                    return RedirectToAction(Constants.LoginAction, "Account");
                 }
 
-                var model = new HomeViewModel
-                {
-                    UserName = user.UserName,
-                    Name = user.Name,
-                    email = user.Email,
-                    TaskLists = user.Notes.Where(u => u.IsDeleted == false).Select(n => new TaskEdit
-                    {
-                        Id = n.Id,
-                        Title = n.Title,
-                        Description = n.Description,
-                        Status = n.Status,
-                        LastUpdated = n.LastModifiedAt,
-                    }).ToList()
-                };
+                var model = _noteService.CreateHomeViewModel(userData);
                 return View(model);
             }
         }
         [HttpGet]
         public IActionResult Create()
         {
-            return View();
+            return View(Constants.CreateRoute);
         }
         [HttpPost]
-        public IActionResult Create(TaskEdit model)
+        public IActionResult CreateNote(TaskEditViewModel model)
         {
-            var UserName = HttpContext.Session.GetString("UserName");
-            var user = _context.Users.FirstOrDefault(u => u.UserName == UserName);
+            var UserName = SessionGetUserName();
+            var userData = _userService.GetUser(UserName);
 
-            if (user == null)
+            if (userData == null)
             {
                 return RedirectToAction("Login", "Account");
             }
+            _noteService.CreateNotes(userData, model);
 
-            var note = new Notes
-            {
-                Title = model.Title,
-                Description = model.Description,
-                Status = model.Status ?? "Pending",
-                UsersId = user.Id,
-            };
-            _context.Notes.Add(note);
-            _context.SaveChanges();
-
-            TempData["NoteSuccess"] = "Note Successfully Created";
+            NotesCreateSuccess();
             return RedirectToAction("Index");
         }
         [HttpPost]
@@ -82,53 +86,33 @@ namespace UseNotesApplication.Controllers
         [HttpGet]
         public IActionResult GetNote(int id)
         {
-            var UserName = HttpContext.Session.GetString("UserName");
-            var user = _context.Users.Include(u => u.Notes).FirstOrDefault(u => u.UserName == UserName);
+            var UserName = SessionGetUserName();
+            var userData = _userService.GetUserWithNotes(UserName);
 
-            var note = user?.Notes.FirstOrDefault(u => u.Id == id && !u.IsDeleted);
-
-            if (note == null)
+            var noteData = _noteService.GetNote(userData, id);
+            if (noteData == null)
             {
-                return RedirectToAction("index");
+                return RedirectToAction(Constants.IndexAction);
             }
 
-            var model = new TaskEdit
-            {
-                Title = note.Title,
-                Description = note.Description,
-                Status = note.Status,
-                LastUpdated = note.LastModifiedAt,
-            };
+            var noteViewModel = _noteService.CreateViewModel(noteData);
             ViewBag.NoteId = id;
-            return View(model);
+            return View(Constants.GetNoteRoute, noteViewModel);
         }
         [HttpPost]
-        public IActionResult Edit(int id, TaskEdit model)
+        public IActionResult Edit(int id, TaskEditViewModel model)
         {
-            var UserName = HttpContext.Session.GetString("UserName");
-            var note = _context.Notes.FirstOrDefault(u => u.Id == id && !u.IsDeleted && u.Users.UserName == UserName);
+            var UserName = SessionGetUserName();
+            var userData = _userService.GetUserWithNotes(UserName);
+            var noteData = _noteService.GetNote(userData, id);
 
-            if (note == null)
-                return RedirectToAction("Index");
+            if (noteData == null)
+                return RedirectToAction(Constants.IndexAction);
 
-            var version = new NoteVersion
-            {
-                NotesId = note.Id,
-                Title = note.Title,
-                Description = note.Description,
-                Status = note.Status,
-                Timestamp = DateTime.UtcNow
-            };
-            _context.NoteVersions.Add(version);
-
-            note.Title = model.Title;
-            note.Description = model.Description;
-            note.Status = model.Status ?? "Pending";
-            note.LastModifiedAt = DateTime.UtcNow;
-            _context.SaveChanges();
-
-            TempData["NoteUpdated"] = "Notes Updated Successfully";
-            return RedirectToAction("index");
+            _noteService.CreateNoteVersion(noteData);
+            _noteService.UpdateNote(noteData, model);
+            NotesUpdateSuccess();
+            return RedirectToAction(Constants.IndexAction);
         }
         public IActionResult Privacy()
         {
@@ -142,14 +126,13 @@ namespace UseNotesApplication.Controllers
         }
         public IActionResult Delete(int Id)
         {
-            var note = _context.Notes.FirstOrDefault(u => u.Id == Id);
+            var note = _noteService.GetNote(Id);
 
             if (note == null)
-                return RedirectToAction("index");
+                return RedirectToAction(Constants.IndexAction);
 
-            note.IsDeleted = true;
-            _context.SaveChanges();
-            return RedirectToAction("index");
+            _noteService.DeleteNote(note);
+            return RedirectToAction(Constants.IndexAction);
         }
     }
 }

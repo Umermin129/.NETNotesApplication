@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace UseNotesApplication.ViewModels
+namespace UseNotesApplication.ViewModels.Registration
 {
     public class RegistrationViewModel
     {

@@ -2,21 +2,105 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Text.Json;
+using UseNotesApplication.Controllers;
 using UseNotesApplication.Data;
 using UseNotesApplication.Models;
+using UseNotesApplication.Services;
 using UseNotesApplication.ViewModels;
-using UseNotesApplication.Controllers;
+using UseNotesApplication.ViewModels.Home;
+using UseNotesApplication.ViewModels.Login;
+using UseNotesApplication.ViewModels.Registration;
 namespace UseNotesApplication.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly AppDbContext _context;
-        private readonly IWebHostEnvironment _webHostEnvironment;
-
-        public AccountController(AppDbContext context, IWebHostEnvironment webHostEnvironment)
+        private UserServices _services;
+       
+        public AccountController(UserServices userServices)
         {
-            _context = context;
-            _webHostEnvironment = webHostEnvironment;
+            _services = userServices;
+        }
+
+        //Session Strings
+        private void SessionSetExpectedSequence(Users user)
+        {
+            HttpContext.Session.SetString(Constants.ExpectedSequence, string.Join(",", user.Pictures.OrderBy(p => p.Sequence).Select(p => p.Id)));
+        }
+        private string SessionGetExpectedSequence()
+        {
+            return HttpContext.Session.GetString(Constants.ExpectedSequence);
+        }
+        private void SessionSetUserName(string UserName)
+        {
+            HttpContext.Session.SetString("UserName", UserName);
+        }
+        private string SessionGetUserName()
+        {
+            return HttpContext.Session.GetString("UserName");
+        }
+        private void SessionClear()
+        {
+            HttpContext.Session.Clear();
+            TempData["LogOutSuccess"] = Constants.LogoutSuccess;
+        }
+        //ModelState Errors
+        private void ModelError(string key,string error)
+        {
+            ModelState.AddModelError(key, error);
+        }
+
+        //TempData methods
+        public void RegisterSuccess()
+        {
+            TempData["Success"] = Constants.RegisterSuccess;
+        }
+        public void LoginModelSerialize(LoginViewModel loginModel)
+        {
+            TempData["LoginModel"] = JsonSerializer.Serialize(loginModel);
+        }
+        public void UserUpdateSuccess()
+        {
+            TempData["ProfileUpdated"] = Constants.ProfileUpdate;
+        }
+        //Json Data
+        string loginModelJson;
+        LoginViewModel previousModel = null;
+        private void SetPreviousModel()
+        {
+            if (GetLoginModelJson() != null)
+            {
+                previousModel = JsonSerializer.Deserialize<LoginViewModel>(GetLoginModelJson());
+                TempData.Keep("LoginModel");
+            }
+        }
+        private void SetLoginModelJson()
+        {
+            var loginModelJson = TempData["LoginModel"] as string;
+        }
+        private string GetLoginModelJson()
+        {
+            return loginModelJson;
+        }
+        //Sequence
+        string expectedSequence;
+        public IActionResult SetExpectedSequence()
+        {
+            expectedSequence = SessionGetExpectedSequence();
+
+            if (expectedSequence == null)
+            {
+                ModelState.AddModelError("", Constants.SessionError);
+                return RedirectToAction(Constants.LoginAction);
+            }
+            else return null;
+        }
+        //Form Data
+        string formSelectedIds;
+        List<int> selectedIds;
+        public void ConvertFormIdToSelectedId()
+        {
+            formSelectedIds = Request.Form["SelectedImageIds"].ToString();
+            selectedIds = formSelectedIds.Split(',').Select(id => int.Parse(id)).ToList();
         }
         //Register Module Logic
         [HttpGet]
@@ -25,61 +109,33 @@ namespace UseNotesApplication.Controllers
             return View();
         }
         [HttpPost]
-        public IActionResult Register(RegistrationViewModel model)
+        public IActionResult ConfirmRegister(RegistrationViewModel model)
         {
-
-            if (!ModelState.IsValid || model.Images.Count != 5 || model.Sequence.Count != 5)
+            if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Please Upload exactly 5 images and Sequence!");
-                return View(model);
+                return View(Constants.RegisterView,model);
             }
-            if (_context.Users.Any(u => u.UserName == model.UserName))
+            if (_services.checkImagesCount(model))
             {
-                ModelState.AddModelError("UserName", "UserName already Exists!");
-                return View(model);
+                ModelError(string.Empty,Constants.imagesError);
+                return View(Constants.RegisterView, model);
             }
-            if (_context.Users.Any(u => u.Email == model.Email))
+            if (_services.checkUserName(model.UserName))
             {
-                ModelState.AddModelError("Email", "User with this email already Exists!");
+                ModelError(Constants.errUserName, Constants.userNameError);
+                return View(Constants.RegisterView,model);
             }
-            var user = new Users
+            if (_services.checkUserEmail(model.Email))
             {
-                UserName = model.UserName,
-                Name = model.Name,
-                Email = model.Email
-            };
-
-            _context.Users.Add(user);
-            _context.SaveChanges();
-
-            String userFolder = Path.Combine(_webHostEnvironment.WebRootPath, "UserImages", user.UserName);
-            Directory.CreateDirectory(userFolder);
-
-            for (int i = 0; i < 5; i++)
-            {
-                var File = model.Images[i];
-                var sequence = model.Sequence[i];
-                var fileExtension = Path.GetExtension(File.FileName);
-
-                var fileName = $"{Guid.NewGuid()}_{sequence}{fileExtension}";
-                var filePath = Path.Combine(userFolder, fileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    File.CopyTo(stream);
-                }
-                var images = new UserPictures
-                {
-                    ImageURI = Path.Combine("UserImages", user.UserName, fileName).Replace("\\", "/"),
-                    Sequence = sequence,
-                    UsersId = user.Id,
-
-                };
-                _context.UserPictures.Add(images);
-                _context.SaveChanges();
+                ModelError(Constants.errEmail,Constants.userEmailError);
+                return View(Constants.RegisterView,model);
             }
-            TempData["Success"] = "Registered Successfully";
-            return RedirectToAction("Login");
+            _services.VmToDb(model);
+
+            _services.CreateUserFolder(model);
+            
+            RegisterSuccess();
+            return RedirectToAction(Constants.LoginAction);
         }
         //Login Logic
         [HttpGet]
@@ -91,73 +147,39 @@ namespace UseNotesApplication.Controllers
         [HttpPost]
         public IActionResult LoginUserName(string UserName)
         {
-            var user = _context.Users.Include(x => x.Pictures).FirstOrDefault(u => u.UserName == UserName);
-
+            var user = _services.GetUserNameWithPictures(UserName);
             if (user == null)
             {
-                ModelState.AddModelError("UserName", "Invalid UserName");
-                return View("Login");
+                ModelState.AddModelError("UserName", Constants.userNameInvalid);
+                return View(Constants.LoginView);
             }
 
-            var randomImages = Enumerable.Range(1, 10)
-                .Select(i => new LoginImage
-                {
-                    Id = i,
-                    ImageURI = $"/UserImages/Image{i}.jpg"
-                })
-                .ToList();
-            var currentPictures = user.Pictures.Select(i => new LoginImage { Id = i.Id, ImageURI = i.ImageURI }).ToList();
+            var randomImages = _services.CreateLoginImages();
+            var currentPictures = _services.GetCurrentImages(user);
 
-            var fullImages = currentPictures.Concat(randomImages).OrderBy(x=> GenerateCode()).ToList();
-            HttpContext.Session.SetString("ExpectedSequence", string.Join(",", user.Pictures.OrderBy(p => p.Sequence).Select(p => p.Id)));
-            HttpContext.Session.SetString("UserName", UserName);
-            var loginModel = new LoginViewModel
-            {
-                UserName = UserName,
-                GridImages = fullImages
-            };
-            
-            TempData["LoginModel"] = JsonSerializer.Serialize(loginModel);
-
-            return View("LoginGrid", loginModel);
+            var fullImages = currentPictures.Concat(randomImages).OrderBy(x => Constants.GenerateCode()).ToList();
+            SessionSetExpectedSequence(user);
+            SessionSetUserName(UserName);
+            var loginModel = _services.CreateLoginModel(UserName, fullImages);
+            LoginModelSerialize(loginModel);
+            return View(Constants.LoginGridView, loginModel);
         }
-        private int GenerateCode()
-        {
-            Random random = new Random();
-            int number = random.Next(1, 11);
-            Console.WriteLine(number);
-            return number;
-        }
-        [HttpPost]
+        
         [HttpPost]
         public IActionResult LoginConfirm(LoginViewModel model)
         {
-            var loginModelJson = TempData["LoginModel"] as string;
-
-            LoginViewModel previousModel = null;
-            if (loginModelJson != null)
-            {
-                previousModel = JsonSerializer.Deserialize<LoginViewModel>(loginModelJson);
-                TempData.Keep("LoginModel");
-            }
-
-            var expectedSequence = HttpContext.Session.GetString("ExpectedSequence");
-
-            if (expectedSequence == null)
-            {
-                ModelState.AddModelError("", "Session Expired");
-                return RedirectToAction("Login");
-            }
+            SetLoginModelJson();
+            SetPreviousModel();
+            SetExpectedSequence();
 
             // Parse posted image ID string into a list
-            var formSelectedIds = Request.Form["SelectedImageIds"].ToString();
-            var selectedIds = formSelectedIds.Split(',').Select(id => int.Parse(id)).ToList();
+            ConvertFormIdToSelectedId();
 
             var expectedIds = expectedSequence.Split(',').Select(int.Parse).ToList();
 
             if (selectedIds.Count != 5)
             {
-                ModelState.AddModelError("", "Please select exactly 5 images.");
+                ModelState.AddModelError("", Constants.imagesError);
 
                 if (previousModel != null)
                 {
@@ -170,10 +192,10 @@ namespace UseNotesApplication.Controllers
 
             if (!expectedIds.SequenceEqual(selectedIds))
             {
-                ModelState.AddModelError("", "Invalid Sequence");
+                ModelState.AddModelError("", Constants.InvalidSequence);
 
-                string userName = HttpContext.Session.GetString("UserName");
-                var user = _context.Users.Include(u => u.Pictures).FirstOrDefault(u => u.UserName == userName);
+                string userName = SessionGetUserName();
+                var user = _services.GetUserNameWithPictures(userName);
 
                 model.GridImages = user?.Pictures?.Select(i => new LoginImage
                 {
@@ -186,7 +208,7 @@ namespace UseNotesApplication.Controllers
                 return View("LoginGrid", model);
             }
 
-            TempData["LoginSuccess"] = $"Welcome {HttpContext.Session.GetString("UserName")}";
+            TempData["LoginSuccess"] = Constants.LoginSuccess;
             return RedirectToAction("Index");
         }
         //Home View Logic
@@ -197,32 +219,14 @@ namespace UseNotesApplication.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        //[HttpGet]
-        /*  public IActionResult UserGet()
-          {
-              var userName = HttpContext.Session.GetString("UserName");
-              var user = _context.Users.Include(u => u.Notes).FirstOrDefault(i => i.UserName == userName);
-              if (user == null)
-              {
-                  ModelState.AddModelError("UserName", "User Not Found!");
-                  return View("Login");
-              }
-
-          }*/
         [HttpGet]
-        public IActionResult UpdateProfile()
+        public IActionResult GetProfile()
         {
             var userName = HttpContext.Session.GetString("UserName");
-            var user = _context.Users.FirstOrDefault(u => u.UserName == userName);
-
+            var user = _services.GetUser(userName);
             if (user == null) return RedirectToAction("Login");
 
-            var model = new ProfileViewModel
-            {
-                UserName = user.UserName,
-                Name = user.Name,
-                Email = user.Email
-            };
+            var model = _services.CreateProfileModel(user);
 
             return View(model);
         }
@@ -230,27 +234,24 @@ namespace UseNotesApplication.Controllers
         [HttpPost]
         public IActionResult UpdateProfile(ProfileViewModel model)
         {
-            var UserName = HttpContext.Session.GetString("UserName");
-            var user = _context.Users.FirstOrDefault(i => i.UserName == UserName);
+            var UserName = SessionGetUserName();
+            var user = _services.GetUser(UserName);
+            if (user == null) return RedirectToAction(Constants.IndexAction, "Home");
 
-            if (user == null) return RedirectToAction("Index", "Home");
-
-            if(_context.Users.Any(u => u.UserName != UserName && u.Email == model.Email))
+            if (_services.checkUserEmail(model.Email) && !_services.checkUserName(model.UserName))
             {
-                ModelState.AddModelError("Email", "User with this email already Exists");
-                return View(model);
+                ModelError(Constants.errEmail,Constants.userEmailError);
+                return View(Constants.GetProfileView, model);
             }
-            user.Email = model.Email;
-            user.Name = model.Name;
-            TempData["ProfileUpdated"] = "Profile updated successfully!";
-            return RedirectToAction("Index");
+            _services.UpdateProfile(user, model);
+            UserUpdateSuccess();
+            return RedirectToAction(Constants.IndexAction);
         }
         [HttpGet]
         public IActionResult LogOut()
         {
-            HttpContext.Session.Clear();
-            TempData["LogOutSuccess"] = "You Have LoggedOut Successfully";
-            return RedirectToAction("Login");
+            SessionClear();
+            return RedirectToAction(Constants.LoginAction);
         }
     }
 }
