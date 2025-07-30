@@ -32,8 +32,16 @@ namespace UseNotesApplication.Services
                 Name = model.Name,
                 Email = model.Email
             };
-            _context.Users.Add(user);
-            _context.SaveChanges();
+            try
+            {
+                _context.Users.Add(user);
+                _context.SaveChanges();
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"{Constants.AddUserErr}:{e.Message}");
+            }
+            
         }
         //UserCredentials Methods
         public bool checkImagesCount(RegistrationViewModel model)
@@ -42,18 +50,40 @@ namespace UseNotesApplication.Services
         }
         public bool checkUserName(String userName)
         {
-            return _context.Users.Any(u => u.UserName == userName);
+            try
+            {
+                return _context.Users.Any(u => u.UserName == userName);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"{Constants.UserCheckErr}:{e.Message}");
+            }
         }
         public bool checkUserEmail(String Email)
         {
-            return _context.Users.Any(u => u.Email == Email);
+            try
+            {
+                return _context.Users.Any(u => u.Email == Email);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"{Constants.EmailCheckErr}:{e.Message}");
+            }
         }
         //Folders Creation
         public void CreateUserFolder(RegistrationViewModel model)
         {
-            String userFolder = Path.Combine(_webHostEnvironment.WebRootPath, "UserImages", user.UserName);
-            Directory.CreateDirectory(userFolder);
-            CreateImageURI(model, userFolder);
+            try
+            {
+                String userFolder = Path.Combine(_webHostEnvironment.WebRootPath, "UserImages", user.UserName);
+                Directory.CreateDirectory(userFolder);
+                CreateImageURI(model, userFolder);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"{Constants.CreateUserFolderErr}:{e.Message}");
+            }
+            
         }
         public void CreateImageURI(RegistrationViewModel model, String userFolder)
         {
@@ -66,9 +96,16 @@ namespace UseNotesApplication.Services
                 var fileName = $"{Guid.NewGuid()}_{sequence}{fileExtension}";
                 var filePath = Path.Combine(userFolder, fileName);
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                try
                 {
-                    File.CopyTo(stream);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        File.CopyTo(stream);
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw new Exception($"{Constants.FileCopyErr}:{e.Message}");
                 }
                 CreateImageDb(fileName, sequence);
             }
@@ -81,21 +118,49 @@ namespace UseNotesApplication.Services
                 Sequence = sequence,
                 UsersId = user.Id,
             };
-            _context.UserPictures.Add(images);
-            _context.SaveChanges();
+            try
+            {
+                _context.UserPictures.Add(images);
+                _context.SaveChanges();
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"{Constants.PictureDBErr}:{e.Message}");
+            }
         }
         //Get Users
         public Users GetUserNameWithPictures(string UserName)
         {
-            return _context.Users.Include(x => x.Pictures).FirstOrDefault(u => u.UserName == UserName);
+            try
+            {
+                return _context.Users.Include(x => x.Pictures).FirstOrDefault(u => u.UserName == UserName);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"{Constants.UserPicErr}:{e.Message}");
+            }
         }
         public Users GetUser(string UserName)
         {
-            return _context.Users.FirstOrDefault(u => u.UserName == UserName);
+            try
+            {
+                return _context.Users.FirstOrDefault(u => u.UserName == UserName);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"{Constants.GetUserErr}:{e.Message}");
+            }
         }
         public Users GetUserWithNotes(string UserName)
         {
-            return _context.Users.Include(u => u.Notes).FirstOrDefault(u => u.UserName == UserName);
+            try
+            {
+                return _context.Users.Include(u => u.Notes).FirstOrDefault(u => u.UserName == UserName);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"{Constants.GetUserErr}:{e.Message}");
+            }
         }
         //Images Grid Create
         public List<LoginImage> CreateLoginImages()

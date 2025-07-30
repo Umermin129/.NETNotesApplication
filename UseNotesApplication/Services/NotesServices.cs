@@ -3,12 +3,24 @@ using UseNotesApplication.Data;
 using UseNotesApplication.Models;
 using UseNotesApplication.ViewModels.Home;
 using UseNotesApplication.ViewModels.Notes;
-
+using UseNotesApplication.Controllers;
+using System.Reflection.Metadata;
 namespace UseNotesApplication.Services
 {
     public class NotesServices
     {
         private readonly AppDbContext _context;
+        //CreateNotes VM to DB
+        public Notes NotesVMToDb(Users user,TaskEditViewModel model)
+        {
+            return new Notes
+            {
+                Title = model.Title,
+                Description = model.Description,
+                Status = model.Status ?? "Pending",
+                UsersId = user.Id,
+            };
+        }
         //Create Notes
         public NotesServices(AppDbContext context)
         {
@@ -16,16 +28,19 @@ namespace UseNotesApplication.Services
         }
         public void CreateNotes(Users user, TaskEditViewModel model)
         {
-            var note = new Notes
+            var note = NotesVMToDb(user,model);
+            try
             {
-                Title = model.Title,
-                Description = model.Description,
-                Status = model.Status ?? "Pending",
-                UsersId = user.Id,
-            };
-            _context.Notes.Add(note);
-            _context.SaveChanges();
+                _context.Notes.Add(note);
+                _context.SaveChanges();
+            }
+            catch (Exception e)
+            {
+
+                throw new Exception($"{Constants.SaveNotesDB}: {e.Message}");
+            }
         }
+        
         //Update Notes
         public void UpdateNote(Notes note, TaskEditViewModel model)
         {
@@ -44,11 +59,25 @@ namespace UseNotesApplication.Services
         //Get Notes
         public Notes GetNote(Users user,int id)
         {
-            return user?.Notes.FirstOrDefault(u => u.Id == id && !u.IsDeleted);
+            try
+            {
+                return user?.Notes.FirstOrDefault(u => u.Id == id && !u.IsDeleted);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"{Constants.GetNoteErr}: {e.Message}");
+            }
         }
         public Notes GetNote(int Id)
         {
-            return _context.Notes.FirstOrDefault(u => u.Id == Id);
+            try
+            {
+                return _context.Notes.FirstOrDefault(u => u.Id == Id);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"{Constants.GetNoteErr}: {e.Message}");
+            }
         }
         //DB to VM
         public TaskEditViewModel CreateViewModel(Notes note)
@@ -89,7 +118,14 @@ namespace UseNotesApplication.Services
                 Status = note.Status,
                 Timestamp = DateTime.UtcNow
             };
-            _context.NoteVersions.Add(version);
+            try
+            {
+                _context.NoteVersions.Add(version);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"{Constants.SaveNoteVersionErr}: {e.Message}");
+            }
         }
     }
 

@@ -1,5 +1,9 @@
 ﻿@using UseNotesApplication.ViewModels.Login
 @model LoginViewModel
+@if (TempData["LoginError"] != null)
+{
+    <div class="alert alert-danger">@TempData["LoginError"]</div>
+}
 <h2>Welcome to Login Page</h2>
 
 <form asp-action="LoginUserName" method="post">

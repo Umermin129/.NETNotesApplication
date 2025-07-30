@@ -3,6 +3,14 @@
 @{
     ViewData["Title"] = "Edit Note";
 }
+@if (TempData["GetNoteError"] != null)
+{
+    <div class="alert alert-danger">@TempData["GetNoteError"]</div>
+}
+@if (TempData["EditNoteError"] != null)
+{
+    <div class="alert alert-danger">@TempData["EditNoteError"]</div>
+}
 
 <h2>Edit Note</h2>
 @{

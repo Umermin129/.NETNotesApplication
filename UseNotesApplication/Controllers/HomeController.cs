@@ -1,11 +1,12 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using UseNotesApplication.Data;
 using UseNotesApplication.Models;
-using UseNotesApplication.ViewModels.Notes;
-using UseNotesApplication.ViewModels.Home;
 using UseNotesApplication.Services;
+using UseNotesApplication.ViewModels.Home;
+using UseNotesApplication.ViewModels.Notes;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace UseNotesApplication.Controllers
 {
@@ -29,36 +30,61 @@ namespace UseNotesApplication.Controllers
         {
             TempData["NoteUpdated"] = Constants.NoteUpdate;
         }
+        //TempData Error
+        private void NotesCreateError(Exception error)
+        {
+            TempData["NotesCreateError"] = error.Message;
+        }
+        private void UserDataLoadError(Exception error)
+        {
+            TempData["UserDataError"] = error.Message;
+        }
+        private void GetNoteError(Exception error)
+        {
+            TempData["GetNoteError"] = error.Message;
+        }
+        private void EditNoteError(Exception error)
+        {
+            TempData["EditNoteError"] = error.Message;
+        }
+
 
         private readonly ILogger<HomeController> _logger;
-        
-        UserServices _userService ;
-        NotesServices _noteService ;
-        public HomeController(ILogger<HomeController> logger,UserServices userServices,NotesServices notesServices)
+
+        UserServices _userService;
+        NotesServices _noteService;
+        public HomeController(ILogger<HomeController> logger, UserServices userServices, NotesServices notesServices)
         {
             _userService = userServices;
             _noteService = notesServices;
             _logger = logger;
-
         }
-        
+
         [HttpGet]
         public IActionResult Index()
         {
-            var UserName = SessionGetUserName();
-            if (UserName == null)
-                return View();
-            else
+            try
             {
-                var userData = _userService.GetUserWithNotes(UserName);
-
-                if (userData == null)
+                var UserName = SessionGetUserName();
+                if (UserName == null)
+                    return View();
+                else
                 {
-                    return RedirectToAction(Constants.LoginAction, "Account");
-                }
+                    var userData = _userService.GetUserWithNotes(UserName);
 
-                var model = _noteService.CreateHomeViewModel(userData);
-                return View(model);
+                    if (userData == null)
+                    {
+                        return RedirectToAction(Constants.LoginAction, "Account");
+                    }
+
+                    var model = _noteService.CreateHomeViewModel(userData);
+                    return View(model);
+                }
+            }
+            catch (Exception ex)
+            {
+                UserDataLoadError(ex);
+                return RedirectToAction(Constants.LoginAction, "Account");
             }
         }
         [HttpGet]
@@ -69,14 +95,20 @@ namespace UseNotesApplication.Controllers
         [HttpPost]
         public IActionResult CreateNote(TaskEditViewModel model)
         {
-            var UserName = SessionGetUserName();
-            var userData = _userService.GetUser(UserName);
-
-            if (userData == null)
+            try
             {
-                return RedirectToAction("Login", "Account");
+                var UserName = SessionGetUserName();
+                var userData = _userService.GetUser(UserName);
+
+                if (userData == null)
+                {
+                    return RedirectToAction("Login", "Account");
+                }
+                _noteService.CreateNotes(userData, model);
+            }catch(Exception ex)
+            {
+                NotesCreateError(ex);
             }
-            _noteService.CreateNotes(userData, model);
 
             NotesCreateSuccess();
             return RedirectToAction("Index");
@@ -86,33 +118,48 @@ namespace UseNotesApplication.Controllers
         [HttpGet]
         public IActionResult GetNote(int id)
         {
-            var UserName = SessionGetUserName();
-            var userData = _userService.GetUserWithNotes(UserName);
-
-            var noteData = _noteService.GetNote(userData, id);
-            if (noteData == null)
+            try
             {
+                var UserName = SessionGetUserName();
+                var userData = _userService.GetUserWithNotes(UserName);
+
+                var noteData = _noteService.GetNote(userData, id);
+                if (noteData == null)
+                {
+                    return RedirectToAction(Constants.IndexAction);
+                }
+
+                var noteViewModel = _noteService.CreateViewModel(noteData);
+                ViewBag.NoteId = id;
+                return View(Constants.GetNoteRoute, noteViewModel);
+            }
+            catch(Exception ex) 
+            {
+                GetNoteError(ex);
                 return RedirectToAction(Constants.IndexAction);
             }
-
-            var noteViewModel = _noteService.CreateViewModel(noteData);
-            ViewBag.NoteId = id;
-            return View(Constants.GetNoteRoute, noteViewModel);
         }
         [HttpPost]
         public IActionResult Edit(int id, TaskEditViewModel model)
         {
-            var UserName = SessionGetUserName();
-            var userData = _userService.GetUserWithNotes(UserName);
-            var noteData = _noteService.GetNote(userData, id);
+            try
+            {
+                var UserName = SessionGetUserName();
+                var userData = _userService.GetUserWithNotes(UserName);
+                var noteData = _noteService.GetNote(userData, id);
 
-            if (noteData == null)
+                if (noteData == null)
+                    return RedirectToAction(Constants.IndexAction);
+
+                _noteService.CreateNoteVersion(noteData);
+                _noteService.UpdateNote(noteData, model);
+                NotesUpdateSuccess();
                 return RedirectToAction(Constants.IndexAction);
-
-            _noteService.CreateNoteVersion(noteData);
-            _noteService.UpdateNote(noteData, model);
-            NotesUpdateSuccess();
-            return RedirectToAction(Constants.IndexAction);
+            }
+            catch (Exception ex) { 
+               EditNoteError(ex);
+                return RedirectToAction(Constants.IndexAction);
+            }
         }
         public IActionResult Privacy()
         {

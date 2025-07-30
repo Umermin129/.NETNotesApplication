@@ -1,6 +1,10 @@
 ﻿@model LoginViewModel
 @using System.Text.Json
 @using UseNotesApplication.ViewModels.Login
+@if (TempData["LoginError"] != null)
+{
+    <div class="alert alert-danger">@TempData["LoginError"]</div>
+}
 
 <h2>Select Your Image Sequence (Click 5 Images)</h2>
 

@@ -3,7 +3,10 @@
 @{
     ViewData["Title"] = "Create Notes";
 }
-
+@if (TempData["NotesCreateErro"] != null)
+{
+    <div class="alert alert-danger">@TempData["NotesCreateError"]</div>
+}
 <h2>Create New Note</h2>
 
 <form asp-action="CreateNote" method="post">

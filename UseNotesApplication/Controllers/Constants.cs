@@ -38,6 +38,19 @@
         //ViewNames
         public static string GetProfileView = "GetProfile";
         public static string RegisterView = "Register";
+        //Try Catch Error messages
+        public static string SaveNotesDB = "Error in Save Notes to DB";
+        public static string GetNoteErr = "Error in Get Notes";
+        public static string SaveNoteVersionErr = "Error in Save NotesVersions to DB";
+        public static string AddUserErr = "Error in Add USer";
+        public static string GetUserErr = "Error in Get USer";
+
+        public static string UserCheckErr = "Error in User Check";
+        public static string EmailCheckErr = "Error in Email Check";
+        public static string CreateUserFolderErr = "Error in Create UserFolder";
+        public static string FileCopyErr = "Error in File Copy";
+        public static string PictureDBErr = "Error in Adding Pictures to DB";
+        public static string UserPicErr = "Error in Get User Picture";
         //Get Random grid
         public   static int GenerateCode()
         {
