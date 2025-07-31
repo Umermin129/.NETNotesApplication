@@ -1,6 +1,7 @@
+using DataModel.Constants;
 using Microsoft.EntityFrameworkCore;
-using UseNotesApplication.Data;
-using UseNotesApplication.Services;
+using DataModel.Data;
+using Services.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,10 @@ builder.Services.AddSession();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<UserServices>();
 builder.Services.AddScoped<NotesServices>();
+var webRootPath = builder.Environment.WebRootPath;
+
+// Register your service and pass the path
+builder.Services.AddSingleton<FileConstants>(new FileConstants(webRootPath));
 
 
 var app = builder.Build();

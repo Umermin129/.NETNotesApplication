@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
-using UseNotesApplication.Data;
-using UseNotesApplication.Constants;
-using UseNotesApplication.Models;
-using UseNotesApplication.Services;
-using UseNotesApplication.ViewModels.Home;
-using UseNotesApplication.ViewModels.Notes;
+using DataModel.Constants;
+using DataModel.Models;
+using Services.Services;
+using ViewModel.Notes;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace UseNotesApplication.Controllers

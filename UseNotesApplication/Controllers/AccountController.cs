@@ -2,15 +2,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Text.Json;
-using UseNotesApplication.Data;
-using UseNotesApplication.Constants;
-using UseNotesApplication.Models;
-using UseNotesApplication.Services;
-using UseNotesApplication.ViewModels;
-using UseNotesApplication.ViewModels.Home;
-using UseNotesApplication.ViewModels.Login;
-using UseNotesApplication.ViewModels.Registration;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using DataModel.Constants;
+using DataModel.Models;
+using Services.Services;
+using ViewModel.Login;
+using ViewModel.Home;
+using ViewModel.Registration;
 namespace UseNotesApplication.Controllers
 {
     public class AccountController : Controller

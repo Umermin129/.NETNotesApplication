@@ -3,23 +3,23 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using UseNotesApplication.Data;
-using UseNotesApplication.Models;
-using UseNotesApplication.ViewModels;
-using UseNotesApplication.ViewModels.Login;
-using UseNotesApplication.ViewModels.Registration;
-using UseNotesApplication.Constants;
-namespace UseNotesApplication.Services
+using DataModel.Data;
+using DataModel.Models;
+using DataModel.Constants;
+using ViewModel.Home;
+using ViewModel.Login;
+using ViewModel.Registration;
+namespace Services.Services
 {
     public class UserServices
     {
         public readonly AppDbContext _context;
+        public FileConstants FileConstants=new FileConstants();
         public Users user;
-        public readonly IWebHostEnvironment _webHostEnvironment;
-        public UserServices(AppDbContext context, IWebHostEnvironment webHostEnvironment)
+        public readonly IWebHostBuilder _webHostEnvironment;
+        public UserServices(AppDbContext context)
         {
             _context = context;
-            _webHostEnvironment = webHostEnvironment;
         }
         public UserServices()
         {
@@ -71,7 +71,7 @@ namespace UseNotesApplication.Services
         {
             try
             {
-                FileConstants.SetUserFolderPath(_webHostEnvironment.WebRootPath, model.UserName);
+                FileConstants.SetUserFolderPath(model.UserName);
                 Directory.CreateDirectory(FileConstants.userFolderPath);
                 CreateImageURI(model);
             }

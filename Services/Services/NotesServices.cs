@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using UseNotesApplication.Data;
-using UseNotesApplication.Models;
-using UseNotesApplication.ViewModels.Home;
-using UseNotesApplication.ViewModels.Notes;
-using UseNotesApplication.Constants;
+using DataModel.Data;
+using DataModel.Models;
+using DataModel.Constants;
 using Mapster;
-namespace UseNotesApplication.Services
+using ViewModel.Home;
+using ViewModel.Notes;
+namespace Services.Services
 {
     public class NotesServices
     {
