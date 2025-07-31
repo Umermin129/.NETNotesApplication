@@ -1,6 +1,6 @@
-﻿namespace UseNotesApplication.Controllers
+﻿namespace UseNotesApplication.Constants
 {
-    public class Constants
+    public class Constant
     {
         //Error Names
         public static string errImg = "";

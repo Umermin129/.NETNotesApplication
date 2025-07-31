@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using UseNotesApplication.Data;
+using UseNotesApplication.Constants;
 using UseNotesApplication.Models;
 using UseNotesApplication.Services;
 using UseNotesApplication.ViewModels.Home;
@@ -24,11 +25,11 @@ namespace UseNotesApplication.Controllers
         //TempData Success
         private void NotesCreateSuccess()
         {
-            TempData["NoteSuccess"] = Constants.NotesSuccess;
+            TempData["NoteSuccess"] = Constant.NotesSuccess;
         }
         private void NotesUpdateSuccess()
         {
-            TempData["NoteUpdated"] = Constants.NoteUpdate;
+            TempData["NoteUpdated"] = Constant.NoteUpdate;
         }
         //TempData Error
         private void NotesCreateError(Exception error)
@@ -74,7 +75,7 @@ namespace UseNotesApplication.Controllers
 
                     if (userData == null)
                     {
-                        return RedirectToAction(Constants.LoginAction, "Account");
+                        return RedirectToAction(Constant.LoginAction, "Account");
                     }
 
                     var model = _noteService.CreateHomeViewModel(userData);
@@ -84,13 +85,13 @@ namespace UseNotesApplication.Controllers
             catch (Exception ex)
             {
                 UserDataLoadError(ex);
-                return RedirectToAction(Constants.LoginAction, "Account");
+                return RedirectToAction(Constant.LoginAction, "Account");
             }
         }
         [HttpGet]
         public IActionResult Create()
         {
-            return View(Constants.CreateRoute);
+            return View(Constant.CreateRoute);
         }
         [HttpPost]
         public IActionResult CreateNote(TaskEditViewModel model)
@@ -126,17 +127,17 @@ namespace UseNotesApplication.Controllers
                 var noteData = _noteService.GetNote(userData, id);
                 if (noteData == null)
                 {
-                    return RedirectToAction(Constants.IndexAction);
+                    return RedirectToAction(Constant.IndexAction);
                 }
 
                 var noteViewModel = _noteService.CreateViewModel(noteData);
                 ViewBag.NoteId = id;
-                return View(Constants.GetNoteRoute, noteViewModel);
+                return View(Constant.GetNoteRoute, noteViewModel);
             }
             catch(Exception ex) 
             {
                 GetNoteError(ex);
-                return RedirectToAction(Constants.IndexAction);
+                return RedirectToAction(Constant.IndexAction);
             }
         }
         [HttpPost]
@@ -149,16 +150,16 @@ namespace UseNotesApplication.Controllers
                 var noteData = _noteService.GetNote(userData, id);
 
                 if (noteData == null)
-                    return RedirectToAction(Constants.IndexAction);
+                    return RedirectToAction(Constant.IndexAction);
 
                 _noteService.CreateNoteVersion(noteData);
                 _noteService.UpdateNote(noteData, model);
                 NotesUpdateSuccess();
-                return RedirectToAction(Constants.IndexAction);
+                return RedirectToAction(Constant.IndexAction);
             }
             catch (Exception ex) { 
                EditNoteError(ex);
-                return RedirectToAction(Constants.IndexAction);
+                return RedirectToAction(Constant.IndexAction);
             }
         }
         public IActionResult Privacy()
@@ -176,10 +177,10 @@ namespace UseNotesApplication.Controllers
             var note = _noteService.GetNote(Id);
 
             if (note == null)
-                return RedirectToAction(Constants.IndexAction);
+                return RedirectToAction(Constant.IndexAction);
 
             _noteService.DeleteNote(note);
-            return RedirectToAction(Constants.IndexAction);
+            return RedirectToAction(Constant.IndexAction);
         }
     }
 }

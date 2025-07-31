@@ -1,13 +1,14 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using Mapster;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using UseNotesApplication.Controllers;
 using UseNotesApplication.Data;
 using UseNotesApplication.Models;
 using UseNotesApplication.ViewModels;
 using UseNotesApplication.ViewModels.Login;
 using UseNotesApplication.ViewModels.Registration;
+using UseNotesApplication.Constants;
 namespace UseNotesApplication.Services
 {
     public class UserServices
@@ -23,15 +24,10 @@ namespace UseNotesApplication.Services
         public UserServices()
         {
         }
-        //Handle Errors
+        //VM To DB 
         public void VmToDb(RegistrationViewModel model)
         {
-            user = new Users
-            {
-                UserName = model.UserName,
-                Name = model.Name,
-                Email = model.Email
-            };
+            user = model.Adapt<Users>();
             try
             {
                 _context.Users.Add(user);
@@ -39,7 +35,7 @@ namespace UseNotesApplication.Services
             }
             catch(Exception e)
             {
-                throw new Exception($"{Constants.AddUserErr}:{e.Message}");
+                throw new Exception($"{Constant.AddUserErr}:{e.Message}");
             }
             
         }
@@ -56,7 +52,7 @@ namespace UseNotesApplication.Services
             }
             catch (Exception e)
             {
-                throw new Exception($"{Constants.UserCheckErr}:{e.Message}");
+                throw new Exception($"{Constant.UserCheckErr}:{e.Message}");
             }
         }
         public bool checkUserEmail(String Email)
@@ -67,7 +63,7 @@ namespace UseNotesApplication.Services
             }
             catch (Exception e)
             {
-                throw new Exception($"{Constants.EmailCheckErr}:{e.Message}");
+                throw new Exception($"{Constant.EmailCheckErr}:{e.Message}");
             }
         }
         //Folders Creation
@@ -75,47 +71,41 @@ namespace UseNotesApplication.Services
         {
             try
             {
-                String userFolder = Path.Combine(_webHostEnvironment.WebRootPath, "UserImages", user.UserName);
-                Directory.CreateDirectory(userFolder);
-                CreateImageURI(model, userFolder);
+                FileConstants.SetUserFolderPath(_webHostEnvironment.WebRootPath, model.UserName);
+                Directory.CreateDirectory(FileConstants.userFolderPath);
+                CreateImageURI(model);
             }
             catch (Exception e)
             {
-                throw new Exception($"{Constants.CreateUserFolderErr}:{e.Message}");
+                throw new Exception($"{Constant.CreateUserFolderErr}:{e.Message}");
             }
             
         }
-        public void CreateImageURI(RegistrationViewModel model, String userFolder)
+        public void CreateImageURI(RegistrationViewModel model)
         {
             for (int i = 0; i < 5; i++)
             {
-                var File = model.Images[i];
-                var sequence = model.Sequence[i];
-                var fileExtension = Path.GetExtension(File.FileName);
-
-                var fileName = $"{Guid.NewGuid()}_{sequence}{fileExtension}";
-                var filePath = Path.Combine(userFolder, fileName);
-
+                FileConstants.SetFormFile(model.Images[i]);
+                FileConstants.SetSequence(model.Sequence[i]);
+                FileConstants.GenerateFileName();
+                FileConstants.GenerateFilePath();
                 try
                 {
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        File.CopyTo(stream);
-                    }
+                    FileConstants.CopyFileContent();
                 }
                 catch (Exception e)
                 {
-                    throw new Exception($"{Constants.FileCopyErr}:{e.Message}");
+                    throw new Exception($"{Constant.FileCopyErr}:{e.Message}");
                 }
-                CreateImageDb(fileName, sequence);
+                CreateImageDb();
             }
         }
-        public void CreateImageDb(string fileName, int sequence)
+        public void CreateImageDb()
         {
             var images = new UserPictures
             {
-                ImageURI = Path.Combine("UserImages", user.UserName, fileName).Replace("\\", "/"),
-                Sequence = sequence,
+                ImageURI = FileConstants.SetImageURI(user.UserName),
+                Sequence = FileConstants._sequence,
                 UsersId = user.Id,
             };
             try
@@ -125,7 +115,7 @@ namespace UseNotesApplication.Services
             }
             catch (Exception e)
             {
-                throw new Exception($"{Constants.PictureDBErr}:{e.Message}");
+                throw new Exception($"{Constant.PictureDBErr}:{e.Message}");
             }
         }
         //Get Users
@@ -137,7 +127,7 @@ namespace UseNotesApplication.Services
             }
             catch (Exception e)
             {
-                throw new Exception($"{Constants.UserPicErr}:{e.Message}");
+                throw new Exception($"{Constant.UserPicErr}:{e.Message}");
             }
         }
         public Users GetUser(string UserName)
@@ -148,7 +138,7 @@ namespace UseNotesApplication.Services
             }
             catch (Exception e)
             {
-                throw new Exception($"{Constants.GetUserErr}:{e.Message}");
+                throw new Exception($"{Constant.GetUserErr}:{e.Message}");
             }
         }
         public Users GetUserWithNotes(string UserName)
@@ -159,7 +149,7 @@ namespace UseNotesApplication.Services
             }
             catch (Exception e)
             {
-                throw new Exception($"{Constants.GetUserErr}:{e.Message}");
+                throw new Exception($"{Constant.GetUserErr}:{e.Message}");
             }
         }
         //Images Grid Create
@@ -190,18 +180,13 @@ namespace UseNotesApplication.Services
 
         public ProfileViewModel CreateProfileModel(Users user)
         {
-            return new ProfileViewModel
-            {
-                UserName = user.UserName,
-                Name = user.Name,
-                Email = user.Email
-            };
+            return user.Adapt<ProfileViewModel>();
         }
 
         public void UpdateProfile(Users user, ProfileViewModel model)
         {
-            user.Email = model.Email;
-            user.Name = model.Name;
+            model.Adapt(user);
+            _context.SaveChanges();
         }
 
     }

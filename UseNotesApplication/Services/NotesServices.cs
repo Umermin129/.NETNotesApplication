@@ -3,24 +3,14 @@ using UseNotesApplication.Data;
 using UseNotesApplication.Models;
 using UseNotesApplication.ViewModels.Home;
 using UseNotesApplication.ViewModels.Notes;
-using UseNotesApplication.Controllers;
-using System.Reflection.Metadata;
+using UseNotesApplication.Constants;
+using Mapster;
 namespace UseNotesApplication.Services
 {
     public class NotesServices
     {
         private readonly AppDbContext _context;
         //CreateNotes VM to DB
-        public Notes NotesVMToDb(Users user,TaskEditViewModel model)
-        {
-            return new Notes
-            {
-                Title = model.Title,
-                Description = model.Description,
-                Status = model.Status ?? "Pending",
-                UsersId = user.Id,
-            };
-        }
         //Create Notes
         public NotesServices(AppDbContext context)
         {
@@ -28,7 +18,8 @@ namespace UseNotesApplication.Services
         }
         public void CreateNotes(Users user, TaskEditViewModel model)
         {
-            var note = NotesVMToDb(user,model);
+            var note = model.Adapt<Notes>();
+            note.UsersId = user.Id;
             try
             {
                 _context.Notes.Add(note);
@@ -37,16 +28,14 @@ namespace UseNotesApplication.Services
             catch (Exception e)
             {
 
-                throw new Exception($"{Constants.SaveNotesDB}: {e.Message}");
+                throw new Exception($"{Constant.SaveNotesDB}: {e.Message}");
             }
         }
         
         //Update Notes
         public void UpdateNote(Notes note, TaskEditViewModel model)
         {
-            note.Title = model.Title;
-            note.Description = model.Description;
-            note.Status = model.Status ?? "Pending";
+            model.Adapt(note);
             note.LastModifiedAt = DateTime.UtcNow;
             _context.SaveChanges();
         }
@@ -65,7 +54,7 @@ namespace UseNotesApplication.Services
             }
             catch (Exception e)
             {
-                throw new Exception($"{Constants.GetNoteErr}: {e.Message}");
+                throw new Exception($"{Constant.GetNoteErr}: {e.Message}");
             }
         }
         public Notes GetNote(int Id)
@@ -76,55 +65,47 @@ namespace UseNotesApplication.Services
             }
             catch (Exception e)
             {
-                throw new Exception($"{Constants.GetNoteErr}: {e.Message}");
+                throw new Exception($"{Constant.GetNoteErr}: {e.Message}");
             }
         }
         //DB to VM
         public TaskEditViewModel CreateViewModel(Notes note)
         {
-            return new TaskEditViewModel
-            {
-                Title = note.Title,
-                Description = note.Description,
-                Status = note.Status,
-                LastUpdated = note.LastModifiedAt,
-            };
+
+            var config = new TypeAdapterConfig();
+            config.NewConfig<Notes, TaskEditViewModel>()
+                  .Map(dest => dest.LastUpdated, src => src.LastModifiedAt);
+
+            var taskModel = note.Adapt<TaskEditViewModel>(config);
+            return taskModel;
+
         }
         public HomeViewModel CreateHomeViewModel(Users user)
         {
-            return new HomeViewModel
-            {
-                UserName = user.UserName,
-                Name = user.Name,
-                email = user.Email,
-                TaskLists = user.Notes.Where(u => u.IsDeleted == false).Select(n => new TaskEditViewModel
-                {
-                    Id = n.Id,
-                    Title = n.Title,
-                    Description = n.Description,
-                    Status = n.Status,
-                    LastUpdated = n.LastModifiedAt,
-                }).ToList()
-            };
+            var homeModel = user.Adapt<HomeViewModel>();
+            homeModel.TaskLists = user.Notes
+                .Where(n => !n.IsDeleted)
+                .Select(n => CreateViewModel(n))
+                .ToList();
+            return homeModel;
         }
         //Create DB
         public void CreateNoteVersion(Notes note)
         {
-            var version = new NoteVersion
-            {
-                NotesId = note.Id,
-                Title = note.Title,
-                Description = note.Description,
-                Status = note.Status,
-                Timestamp = DateTime.UtcNow
-            };
+            var config = new TypeAdapterConfig();
+            config.NewConfig<Notes, NoteVersion>()
+                .Ignore(dest => dest.Id) // Let EF auto-generate the ID for NoteVersion
+                .Map(dest => dest.NotesId, src => src.Id) // Use Notes.Id as foreign key
+                .Map(dest => dest.Timestamp, src => DateTime.UtcNow); // Optional: force-set timestamp
+
+            var noteVersion = note.Adapt<NoteVersion>(config);
             try
             {
-                _context.NoteVersions.Add(version);
+                _context.NoteVersions.Add(noteVersion);
             }
             catch (Exception e)
             {
-                throw new Exception($"{Constants.SaveNoteVersionErr}: {e.Message}");
+                throw new Exception($"{Constant.SaveNoteVersionErr}: {e.Message}");
             }
         }
     }
