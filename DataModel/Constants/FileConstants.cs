@@ -7,7 +7,7 @@ namespace DataModel.Constants
     public  class FileConstants
     {
         //FileHandling Constants
-        public  string _webHostEnvironment;
+        public  string _webHostEnvironment= Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
         public static string userFolderPath="";
         public const string UserImagesFolder = "UserImages";
         public const string DefaultFileExtension = ".jpg";
@@ -36,7 +36,7 @@ namespace DataModel.Constants
         }
         public  void SetUserFolderPath(string userName)
         {
-            userFolderPath= Path.Combine(_webHostEnvironment, UserImagesFolder, userName);
+            userFolderPath= Path.Combine(_webHostEnvironment, UserImagesFolder, userName).Replace("\\", "/");
         }
 
         public  string GetFullImagePath(string folderPath, string fileName)
@@ -50,7 +50,7 @@ namespace DataModel.Constants
         }
         public  void GenerateFilePath()
         {
-            _filePath = Path.Combine(userFolderPath, _fileName);
+            _filePath = Path.Combine(userFolderPath, _fileName).Replace("\\", "/");
         }
         public  void CopyFileContent()
         {

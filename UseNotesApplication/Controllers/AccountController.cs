@@ -200,7 +200,7 @@ namespace UseNotesApplication.Controllers
             return View();
         }
 
-        [HttpPost]
+       
         public IActionResult LoginUserName(string UserName)
         {
             try
@@ -275,7 +275,7 @@ namespace UseNotesApplication.Controllers
         {
             try
             {
-                var userName = HttpContext.Session.GetString("UserName");
+                var userName = SessionGetUserName();
                 var user = _services.GetUser(userName);
                 if (user == null) return RedirectToAction("Login");
 

@@ -8,15 +8,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddEndpointsApiExplorer(); // for Swagger
+
+
 builder.Services.AddSession();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<UserServices>();
 builder.Services.AddScoped<NotesServices>();
-var webRootPath = builder.Environment.WebRootPath;
+var webRootPath = builder.Environment.WebRootPath
+                  ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
 
 // Register your service and pass the path
 builder.Services.AddSingleton<FileConstants>(new FileConstants(webRootPath));
-
+builder.Services.AddScoped<FileConstants>();
 
 var app = builder.Build();
 
@@ -38,5 +42,5 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
+app.MapControllers();
 app.Run();

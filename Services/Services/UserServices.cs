@@ -184,7 +184,7 @@ namespace Services.Services
         }
 
         public void UpdateProfile(Users user, ProfileViewModel model)
-        {
+        {            
             model.Adapt(user);
             _context.SaveChanges();
         }
