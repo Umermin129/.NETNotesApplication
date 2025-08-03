@@ -46,17 +46,7 @@ namespace Services.Services
             _context.SaveChanges();
         }
         //Get Notes
-        public Notes GetNote(Users user,int id)
-        {
-            try
-            {
-                return user?.Notes.FirstOrDefault(u => u.Id == id && !u.IsDeleted);
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"{Constant.GetNoteErr}: {e.Message}");
-            }
-        }
+       
         public Notes GetNote(int Id)
         {
             try

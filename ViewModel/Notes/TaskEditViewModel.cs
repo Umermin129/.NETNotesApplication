@@ -3,7 +3,6 @@ namespace ViewModel.Notes
 {
     public class TaskEditViewModel
     {
-       
             public int Id { get; set; }
             [Required(ErrorMessage = "Please Enter Title ")]
             public string Title { get; set; }

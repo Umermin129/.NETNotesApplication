@@ -1,11 +1,14 @@
-﻿using Mapster;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+﻿using DataModel.Constants;
 using DataModel.Data;
 using DataModel.Models;
-using DataModel.Constants;
+using Mapster;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Internal;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using ViewModel.Home;
 using ViewModel.Login;
 using ViewModel.Registration;
@@ -14,7 +17,6 @@ namespace Services.Services
     public class UserServices
     {
         public readonly AppDbContext _context;
-        public FileConstants FileConstants=new FileConstants();
         public Users user;
         public readonly IWebHostBuilder _webHostEnvironment;
         public UserServices(AppDbContext context)
@@ -66,13 +68,14 @@ namespace Services.Services
                 throw new Exception($"{Constant.EmailCheckErr}:{e.Message}");
             }
         }
+    
         //Folders Creation
         public void CreateUserFolder(RegistrationViewModel model)
         {
             try
             {
-                FileConstants.SetUserFolderPath(model.UserName);
-                Directory.CreateDirectory(FileConstants.userFolderPath);
+                FileConfig.SetUserFolderPath(model.UserName);
+                Directory.CreateDirectory(FileConfig.UserFolderPath);
                 CreateImageURI(model);
             }
             catch (Exception e)
@@ -81,42 +84,51 @@ namespace Services.Services
             }
             
         }
+
+        
         public void CreateImageURI(RegistrationViewModel model)
         {
+            List<FileConfig> fileConfigs = new List<FileConfig>();
+
             for (int i = 0; i < 5; i++)
             {
-                FileConstants.SetFormFile(model.Images[i]);
-                FileConstants.SetSequence(model.Sequence[i]);
-                FileConstants.GenerateFileName();
-                FileConstants.GenerateFilePath();
+                FileConfig config = new FileConfig(model.Images[i], model.Sequence[i]);
+
+                config.GenerateFilePath();
+                config.GenerateReferencePath(user.UserName);
                 try
                 {
-                    FileConstants.CopyFileContent();
+                    config.CopyFileContent();
                 }
                 catch (Exception e)
                 {
                     throw new Exception($"{Constant.FileCopyErr}:{e.Message}");
                 }
-                CreateImageDb();
+                fileConfigs.Add(config);
             }
+            CreateImageDb(fileConfigs);
         }
-        public void CreateImageDb()
+        public void CreateImageDb(List<FileConfig> fileConfigs)
         {
-            var images = new UserPictures
+
+            foreach (FileConfig file in fileConfigs)
             {
-                ImageURI = FileConstants.SetImageURI(user.UserName),
-                Sequence = FileConstants._sequence,
-                UsersId = user.Id,
-            };
-            try
-            {
-                _context.UserPictures.Add(images);
-                _context.SaveChanges();
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"{Constant.PictureDBErr}:{e.Message}");
-            }
+                var images = new UserPictures
+                {
+                    ImageURI = file.referncePath,
+                    Sequence = file.Sequence,
+                    UsersId = user.Id,
+                };
+                try
+                {
+                    _context.UserPictures.Add(images);
+                    _context.SaveChanges();
+                }
+                catch (Exception e)
+                {
+                    throw new Exception($"{Constant.PictureDBErr}:{e.Message}");
+                }
+            } 
         }
         //Get Users
         public Users GetUserNameWithPictures(string UserName)
@@ -159,7 +171,7 @@ namespace Services.Services
                 .Select(i => new LoginImage
                 {
                     Id = i,
-                    ImageURI = $"/UserImages/Image{i}.jpg"
+                    ImageURI = $"UserImages/Image{i}.jpg"
                 })
                 .ToList();
         }

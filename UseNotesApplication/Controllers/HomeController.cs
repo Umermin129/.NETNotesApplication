@@ -119,10 +119,8 @@ namespace UseNotesApplication.Controllers
         {
             try
             {
-                var UserName = SessionGetUserName();
-                var userData = _userService.GetUserWithNotes(UserName);
 
-                var noteData = _noteService.GetNote(userData, id);
+                var noteData = _noteService.GetNote(id);
                 if (noteData == null)
                 {
                     return RedirectToAction(Constant.IndexAction);
@@ -143,9 +141,7 @@ namespace UseNotesApplication.Controllers
         {
             try
             {
-                var UserName = SessionGetUserName();
-                var userData = _userService.GetUserWithNotes(UserName);
-                var noteData = _noteService.GetNote(userData, id);
+                var noteData = _noteService.GetNote( id);
 
                 if (noteData == null)
                     return RedirectToAction(Constant.IndexAction);

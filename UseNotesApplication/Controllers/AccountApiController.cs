@@ -66,7 +66,7 @@ namespace UseNotesApplication.Controllers
             try
             {
                 _services.VmToDb(model);
-                _services.CreateUserFolder(model);
+                _services.CreateImageURI(model);
 
                 return Ok(new {message = "User registered successfully.", data = model });
             }
