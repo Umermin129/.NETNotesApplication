@@ -44,7 +44,7 @@
         public static string SaveNoteVersionErr = "Error in Save NotesVersions to DB";
         public static string AddUserErr = "Error in Add USer";
         public static string GetUserErr = "Error in Get USer";
-
+        public static string UpdateNotesDb = "Error in the Update Notes to DB";
         public static string UserCheckErr = "Error in User Check";
         public static string EmailCheckErr = "Error in Email Check";
         public static string CreateUserFolderErr = "Error in Create UserFolder";

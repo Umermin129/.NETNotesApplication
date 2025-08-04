@@ -18,26 +18,39 @@ namespace Services.Services
         }
         public void CreateNotes(Users user, TaskEditViewModel model)
         {
+
             var note = model.Adapt<Notes>();
             note.UsersId = user.Id;
             try
             {
                 _context.Notes.Add(note);
                 _context.SaveChanges();
+                //Commit Transaction
+
+
             }
             catch (Exception e)
             {
 
                 throw new Exception($"{Constant.SaveNotesDB}: {e.Message}");
             }
+
+
         }
-        
+
         //Update Notes
         public void UpdateNote(Notes note, TaskEditViewModel model)
         {
-            model.Adapt(note);
-            note.LastModifiedAt = DateTime.UtcNow;
-            _context.SaveChanges();
+                try
+                {
+                    model.Adapt(note);
+                    note.LastModifiedAt = DateTime.UtcNow;
+                    _context.SaveChanges();
+                }
+                catch (Exception e)
+                {
+                    throw new Exception($"{Constant.UpdateNotesDb}: {e.Message}");
+                }
         }
         //Delete Note
         public void DeleteNote(Notes note)
@@ -46,7 +59,7 @@ namespace Services.Services
             _context.SaveChanges();
         }
         //Get Notes
-       
+
         public Notes GetNote(int Id)
         {
             try

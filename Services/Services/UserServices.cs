@@ -29,15 +29,23 @@ namespace Services.Services
         //VM To DB 
         public void VmToDb(RegistrationViewModel model)
         {
-            user = model.Adapt<Users>();
-            try
+
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                _context.Users.Add(user);
-                _context.SaveChanges();
-            }
-            catch(Exception e)
-            {
-                throw new Exception($"{Constant.AddUserErr}:{e.Message}");
+                try
+                {
+                    user = model.Adapt<Users>();
+                    _context.Users.Add(user);
+                    _context.SaveChanges();
+                    transaction.CreateSavepoint("UserSaved");
+                    CreateUserFolder(model);
+                    transaction.Commit();
+                }
+                catch (Exception e)
+                {
+                    transaction.RollbackToSavepoint("UserSaved");
+                    throw new Exception($"{Constant.AddUserErr}:{e.Message}");
+                }
             }
             
         }

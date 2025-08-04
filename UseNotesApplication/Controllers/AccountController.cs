@@ -181,7 +181,6 @@ namespace UseNotesApplication.Controllers
                 }
                 _services.VmToDb(model);
 
-                _services.CreateUserFolder(model);
 
                 RegisterSuccess();
                 return RedirectToAction(Constant.LoginAction);
