@@ -26,8 +26,6 @@ namespace Services.Services
                 _context.Notes.Add(note);
                 _context.SaveChanges();
                 //Commit Transaction
-
-
             }
             catch (Exception e)
             {
