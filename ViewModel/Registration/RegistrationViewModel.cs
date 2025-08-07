@@ -12,7 +12,7 @@ namespace ViewModel.Registration
         [MaxLength(100)]
         public string Name { get; set; }
 
-        [Required]
+        [Required,MinLength(5)]
         [EmailAddress]
         public string Email { get; set; }
 

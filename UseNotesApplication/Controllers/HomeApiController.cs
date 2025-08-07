@@ -44,14 +44,11 @@ namespace UseNotesApplication.Controllers
         {
             try
             {
-               
-
                 var noteData = _noteService.GetNote(noteId);
                 if (noteData == null)
                 {
                     return NotFound(new { message = "Note not found." });
                 }
-
                 var noteViewModel = _noteService.CreateViewModel(noteData);
 
                 return Ok(new
@@ -87,7 +84,7 @@ namespace UseNotesApplication.Controllers
             }
         }
         //DeleteNote 
-        [HttpDelete("DeleteNote/{userName}/{Id}")]
+        [HttpDelete("DeleteNote/{Id}")]
         public IActionResult Delete(int Id)
         {
             var note = _noteService.GetNote(Id);

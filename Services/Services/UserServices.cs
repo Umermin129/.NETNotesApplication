@@ -26,28 +26,64 @@ namespace Services.Services
         public UserServices()
         {
         }
-        //VM To DB 
-        public void VmToDb(RegistrationViewModel model)
+        public bool CheckUniqueness(Response response,RegistrationViewModel model)
+        {
+            bool flag = false;
+            
+            if (checkUserName(model.UserName))
+            {
+                response.StatusCode = 409;
+                response.Message = Constant.userEmailError;
+                flag = true;
+            }
+            if (checkUserEmail(model.Email))
+            {
+                response.StatusCode = 409;
+                response.Message = Constant.userEmailError;
+                flag = true;
+            }
+            response.ModelObject = model;
+            return flag;
+        }
+        public void RegisterSuccess(Response Response, RegistrationViewModel model)
         {
 
-            using (var transaction = _context.Database.BeginTransaction())
+            Response.StatusCode = 200;
+            Response.Message = Constant.RegisterSuccess;
+            Response.ModelObject = model;
+        }
+        //VM To DB 
+        public Response VmToDb(RegistrationViewModel model)
+        {
+            Response response = new Response();
+            
+            if(CheckUniqueness(response, model))
             {
-                try
+                return response;
+            }
+            else
+            {
+                using (var transaction = _context.Database.BeginTransaction())
                 {
-                    user = model.Adapt<Users>();
-                    _context.Users.Add(user);
-                    _context.SaveChanges();
-                    transaction.CreateSavepoint("UserSaved");
-                    CreateUserFolder(model);
-                    transaction.Commit();
-                }
-                catch (Exception e)
-                {
-                    transaction.RollbackToSavepoint("UserSaved");
-                    throw new Exception($"{Constant.AddUserErr}:{e.Message}");
+                    try
+                    {
+                        user = model.Adapt<Users>();
+                        _context.Users.Add(user);
+                        _context.SaveChanges();
+                        transaction.CreateSavepoint("UserSaved");
+                        CreateUserFolder(model);
+                        transaction.Commit();
+                        RegisterSuccess(response,model);
+                        return response;
+                    }
+                    catch (Exception e)
+                    { 
+                        transaction.RollbackToSavepoint("UserSaved");
+                        throw new Exception($"{Constant.AddUserErr}:{e.Message}");
+                    }
                 }
             }
-            
+
         }
         //UserCredentials Methods
         public bool checkImagesCount(RegistrationViewModel model)
@@ -76,7 +112,7 @@ namespace Services.Services
                 throw new Exception($"{Constant.EmailCheckErr}:{e.Message}");
             }
         }
-    
+
         //Folders Creation
         public void CreateUserFolder(RegistrationViewModel model)
         {
@@ -90,10 +126,10 @@ namespace Services.Services
             {
                 throw new Exception($"{Constant.CreateUserFolderErr}:{e.Message}");
             }
-            
+
         }
 
-        
+
         public void CreateImageURI(RegistrationViewModel model)
         {
             List<FileConfig> fileConfigs = new List<FileConfig>();
@@ -136,7 +172,7 @@ namespace Services.Services
                 {
                     throw new Exception($"{Constant.PictureDBErr}:{e.Message}");
                 }
-            } 
+            }
         }
         //Get Users
         public Users GetUserNameWithPictures(string UserName)
@@ -154,6 +190,7 @@ namespace Services.Services
         {
             try
             {
+              
                 return _context.Users.FirstOrDefault(u => u.UserName == UserName);
             }
             catch (Exception e)
@@ -204,7 +241,7 @@ namespace Services.Services
         }
 
         public void UpdateProfile(Users user, ProfileViewModel model)
-        {            
+        {
             model.Adapt(user);
             _context.SaveChanges();
         }

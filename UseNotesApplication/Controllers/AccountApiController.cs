@@ -17,9 +17,7 @@ namespace UseNotesApplication.Controllers
     [ApiController]
     public class AccountApiController : ControllerBase
     {
-        //Json Data
-        string loginModelJson;
-        LoginViewModel previousModel = null;
+       
         private readonly UserServices _services;
         public AccountApiController(UserServices services)
         {
@@ -69,7 +67,7 @@ namespace UseNotesApplication.Controllers
 
                 return Ok(new {message = "User registered successfully.", data = model });
             }
-            catch (Exception ex) {
+                catch (Exception ex) {
                 return StatusCode(500, ex.Message);
             }
         }

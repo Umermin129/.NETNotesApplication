@@ -15,6 +15,8 @@
         public static string userNameInvalid = "UserName Invalid";
         public static string InvalidSequence = " Sequence Invalid";
         public static string SessionError = "Session Expired";
+        public static string NoteNotFoundErr = "Note Not Found";
+        public static string UpdateNoteErr = "Note Couldn't Update";
         //Temp Data Messages
         public static string RegisterSuccess = "Registered Successfully";
         public static string LoginSuccess = "Login Successfully";
@@ -22,6 +24,7 @@
         public static string LogoutSuccess = "You Have LoggedOut Successfully";
         public static string NotesSuccess = "Note Successfully Created";
         public static string NoteUpdate = "Notes Updated Successfully";
+        public static string NoteRetrieveSuccess = "Note Retrieved Successfully";
         //Action Names
         public static string LoginAction = "Login";
         public static string IndexAction = "Index";
@@ -41,6 +44,7 @@
         //Try Catch Error messages
         public static string SaveNotesDB = "Error in Save Notes to DB";
         public static string GetNoteErr = "Error in Get Notes";
+  
         public static string SaveNoteVersionErr = "Error in Save NotesVersions to DB";
         public static string AddUserErr = "Error in Add USer";
         public static string GetUserErr = "Error in Get USer";

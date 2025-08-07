@@ -16,20 +16,39 @@ namespace Services.Services
         {
             _context = context;
         }
-        public void CreateNotes(Users user, TaskEditViewModel model)
+        //Notes Success
+        public void CreateNoteSuccess(Response response, TaskEditViewModel model)
         {
-
-            var note = model.Adapt<Notes>();
-            note.UsersId = user.Id;
+            response.StatusCode = 200;
+            response.Message = Constant.NotesSuccess;
+            response.ModelObject = model; 
+        }
+        public void UpdateNoteSuccess(Response response, TaskEditViewModel model)
+        {
+            response.StatusCode = 200;
+            response.Message = Constant.NoteUpdate;
+            response.ModelObject = model;
+        }
+        public void UpdateNoteFaliure(Response response)
+        {
+            response.StatusCode = 500;
+            response.Message = Constant.UpdateNoteErr;
+        }
+        public Response CreateNotes(Users user, TaskEditViewModel model)
+        {
             try
             {
+                Response response = new Response();
+                var note = model.Adapt<Notes>();
+                note.UsersId = user.Id;
                 _context.Notes.Add(note);
                 _context.SaveChanges();
-                //Commit Transaction
+                CreateNoteSuccess(response, model);
+                return response;
+                
             }
             catch (Exception e)
             {
-
                 throw new Exception($"{Constant.SaveNotesDB}: {e.Message}");
             }
 
@@ -37,18 +56,23 @@ namespace Services.Services
         }
 
         //Update Notes
-        public void UpdateNote(Notes note, TaskEditViewModel model)
+        public Response UpdateNote(Notes note, TaskEditViewModel model)
         {
-                try
-                {
-                    model.Adapt(note);
-                    note.LastModifiedAt = DateTime.UtcNow;
-                    _context.SaveChanges();
-                }
-                catch (Exception e)
-                {
-                    throw new Exception($"{Constant.UpdateNotesDb}: {e.Message}");
-                }
+            Response response = new Response();
+            try
+            {
+                var config = new TypeAdapterConfig();
+                config.NewConfig<TaskEditViewModel, Notes>().Ignore(dest => dest.Id);
+                model.Adapt(note,config);
+                note.LastModifiedAt = DateTime.UtcNow;
+                _context.SaveChanges();
+                UpdateNoteSuccess(response, model);
+                return response;
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"{Constant.UpdateNotesDb}: {e.Message}");
+            }
         }
         //Delete Note
         public void DeleteNote(Notes note)

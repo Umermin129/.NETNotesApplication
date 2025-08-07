@@ -160,32 +160,12 @@ namespace UseNotesApplication.Controllers
         {
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    return View(Constant.RegisterView, model);
-                }
-                if (_services.checkImagesCount(model))
-                {
-                    ModelError(string.Empty, Constant.imagesError);
-                    return View(Constant.RegisterView, model);
-                }
-                if (_services.checkUserName(model.UserName))
-                {
-                    ModelError(Constant.errUserName, Constant.userNameError);
-                    return View(Constant.RegisterView, model);
-                }
-                if (_services.checkUserEmail(model.Email))
-                {
-                    ModelError(Constant.errEmail, Constant.userEmailError);
-                    return View(Constant.RegisterView, model);
-                }
-                _services.VmToDb(model);
-
-
+                var response = _services.VmToDb(model);
+                if (response.StatusCode != 200)
+                    ModelError(string.Empty, response.Message);
                 RegisterSuccess();
                 return RedirectToAction(Constant.LoginAction);
             }
-
             catch (Exception ex)
             {
                 RegisterError(ex);
