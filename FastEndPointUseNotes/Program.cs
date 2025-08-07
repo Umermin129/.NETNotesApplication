@@ -1,0 +1,12 @@
+using DataModel.Data;
+using FastEndpoints;
+using Microsoft.EntityFrameworkCore;
+using Services.Services;
+var builder = WebApplication.CreateBuilder();
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<UserServices>();
+builder.Services.AddScoped<NotesServices>();
+builder.Services.AddFastEndpoints();
+var app = builder.Build();
+app.UseFastEndpoints();
+app.Run();
